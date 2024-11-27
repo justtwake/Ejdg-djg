@@ -1,0 +1,678 @@
+<html><head><base href="./"><title>Secondary Election</title><script src="https://unpkg.com/react@18/umd/react.development.js"></script><script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script><script src="https://unpkg.com/@babel/standalone/babel.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><style>
+:root {
+  --primary: #1a2b4a; /* Deep presidential blue */
+  --secondary: #912828; /* Rich presidential red */
+  --accent: #b8860b; /* Presidential gold */
+  --success: #2c5324;
+  --error: #8b0000;
+  --text: #1a1a1a;
+  --background: #f5f5f5;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--background);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='none' stroke='%23b8860b' stroke-width='0.5' opacity='0.1'/%3E%3Ccircle cx='50' cy='50' r='40' fill='none' stroke='%23b8860b' stroke-width='0.5' opacity='0.1'/%3E%3C/svg%3E");
+  background-size: 300px 300px;
+  opacity: 0.15;
+  z-index: -1;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+header {
+  background: linear-gradient(135deg, var(--primary), #234678);
+  border-bottom: 5px solid var(--accent);
+  padding: 3rem 0;
+}
+
+header h1 {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.vote-form {
+  border: 2px solid var(--accent);
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='none' stroke='%23b8860b' stroke-width='0.5' opacity='0.1'/%3E%3C/svg%3E") no-repeat center center;
+  background-size: 200px;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+input[type="text"],
+input[type="password"], 
+textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.candidate-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.candidate-option {
+  border: 2px solid var(--accent);
+  background: white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  padding: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.candidate-option:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.candidate-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin: 0 auto 1rem auto;
+  object-fit: cover;
+}
+
+.candidate-option.selected {
+  border-color: var(--accent);
+  background: rgba(184, 134, 11, 0.1);
+}
+
+.candidate-Red { color: #e74c3c; }
+.candidate-Blue { color: #3498db; }
+.candidate-Green { color: #2ecc71; }
+.candidate-Orange { color: #e67e22; }
+
+button {
+  background: linear-gradient(135deg, var(--accent), #916f0b);
+  color: white;
+  padding: 0.8rem 2rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+button:hover {
+  background: linear-gradient(135deg, #916f0b, var(--accent));
+}
+
+button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.results-container {
+  border: 2px solid var(--accent);
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='none' stroke='%23b8860b' stroke-width='0.5' opacity='0.1'/%3E%3C/svg%3E") no-repeat center center;
+  background-size: 200px;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 2rem;
+}
+
+.chart-container {
+  height: 400px;
+  margin-top: 2rem;
+}
+
+.error-message {
+  color: var(--error);
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.success-message {
+  color: var(--success);
+  text-align: center;
+  font-size: 1.2rem;
+  margin: 2rem 0;
+}
+
+.admin-button {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  background: var(--secondary);
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.candidate-name {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.admin-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-panel {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 2rem;
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 100;
+}
+
+.admin-panel button {
+  margin-top: 1rem;
+}
+
+.admin-header-panel {
+  background: linear-gradient(135deg, var(--primary), #234678);
+  border-bottom: 3px solid var(--accent);
+  color: white;
+  padding: 1rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-header-panel a {
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.1);
+}
+
+.admin-header-panel a:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.admin-page {
+  padding: 2rem;
+  margin-top: 4rem;
+}
+
+.voter-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.voter-card {
+  border: 1px solid var(--accent);
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.voter-card:hover {
+  transform: translateY(-2px);
+}
+
+.voter-card h3 {
+  margin-bottom: 0.5rem;
+  color: var(--primary);
+}
+
+.voter-meta {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.voter-responses {
+  border-left: 3px solid var(--accent);
+  background: var(--background);
+  padding: 1rem;
+  border-radius: 4px;
+}
+</style></head><body>
+<div id="root"></div>
+
+<script type="text/babel">
+const AdminHeaderPanel = ({ onLogout }) => {
+  const [showAdminPage, setShowAdminPage] = React.useState(false);
+  
+  return (
+    <>
+      <div className="admin-header-panel">
+        <span>Admin Panel</span>
+        <div>
+          <a href="#" onClick={(e) => {
+            e.preventDefault();
+            setShowAdminPage(!showAdminPage);
+          }}>
+            {showAdminPage ? 'Back to Voting' : 'View Admin Page'}
+          </a>
+          <a href="#" onClick={(e) => {
+            e.preventDefault();
+            onLogout();
+          }} style={{marginLeft: '1rem'}}>
+            Logout
+          </a>
+        </div>
+      </div>
+      {showAdminPage && <AdminPage />}
+    </>
+  );
+};
+
+const AdminPage = () => {
+  const [votes, setVotes] = React.useState([]);
+  const room = new WebsimSocket();
+  
+  React.useEffect(() => {
+    room.collection('vote').subscribe((votesData) => {
+      setVotes(votesData);
+    });
+  }, []);
+
+  return (
+    <div className="admin-page">
+      <h2>Election Results</h2>
+      <div className="voter-list">
+        {votes.map((vote) => (
+          <div key={vote.id} className="voter-card">
+            <h3>{vote.name}</h3>
+            <div className="voter-meta">
+              <div>
+                <strong>Candidate Choice:</strong> 
+                <span className={`candidate-${vote.candidate}`}>
+                  {vote.candidate}
+                </span>
+              </div>
+            </div>
+            <div className="voter-responses">
+              <p><strong>Why this candidate:</strong></p>
+              <p>{vote.reason}</p>
+              <p><strong>Desired leader qualities:</strong></p>
+              <p>{vote.leaderQualities}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const VotingApp = () => {
+  const candidates = [
+    { id: 'Green', name: 'A-10 (Drew)', avatar: '/IMG_20241125_201522.jpg', color: '#2ecc71' },
+    { id: 'Red', name: 'Twake (Nick)', avatar: '/IMG_20241125_201447.jpg', color: '#e74c3c' },
+    { id: 'Blue', name: 'Blue Markerz', avatar: '/IMG_20241125_201615.jpg', color: '#3498db' },
+    { id: 'Orange', name: 'Andro', avatar: '/IMG_20241126_212521.jpg', color: '#e67e22' }
+  ];
+
+  const [votes, setVotes] = React.useState([]);
+  const [name, setName] = React.useState('');
+  const [selectedCandidate, setSelectedCandidate] = React.useState('');
+  const [reason, setReason] = React.useState('');
+  const [leaderQualities, setLeaderQualities] = React.useState('');
+  const [hasVoted, setHasVoted] = React.useState(false);
+  const [showConfirmation, setShowConfirmation] = React.useState(false);
+  const [showAdminLogin, setShowAdminLogin] = React.useState(false);
+  const [isAdmin, setIsAdmin] = React.useState(false);
+  const chartRef = React.useRef(null);
+  const chartInstance = React.useRef(null);
+  const room = new WebsimSocket();
+
+  React.useEffect(() => {
+    const voted = localStorage.getItem('hasVoted');
+    if (voted) {
+      setHasVoted(true);
+    }
+
+    const adminStatus = localStorage.getItem('adminLoggedIn') === 'true';
+    setIsAdmin(adminStatus);
+
+    room.collection('vote').subscribe((votes) => {
+      setVotes(votes);
+      updateChart(votes);
+    });
+  }, []);
+
+  const updateChart = (votes) => {
+    if (!chartRef.current) return;
+
+    const voteCounts = candidates.map(candidate => 
+      votes.filter(vote => vote.candidate === candidate.id).length
+    );
+
+    if (chartInstance.current) {
+      chartInstance.current.destroy();
+    }
+
+    const ctx = chartRef.current.getContext('2d');
+    chartInstance.current = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: candidates.map(c => c.name),
+        datasets: [{
+          label: 'Votes',
+          data: voteCounts,
+          backgroundColor: candidates.map(c => c.color),
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: {
+              font: {
+                family: "'Times New Roman', serif"
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1,
+              font: {
+                family: "'Times New Roman', serif"
+              }
+            }
+          },
+          x: {
+            ticks: {
+              font: {
+                family: "'Times New Roman', serif"
+              }
+            }
+          }
+        }
+      }
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name || !selectedCandidate || !reason || !leaderQualities) return;
+    setShowConfirmation(true);
+  };
+
+  const confirmVote = async () => {
+    try {
+      await room.collection('vote').create({
+        name,
+        candidate: selectedCandidate,
+        reason,
+        leaderQualities
+      });
+
+      localStorage.setItem('hasVoted', 'true');
+      setHasVoted(true);
+      setShowConfirmation(false);
+    } catch (error) {
+      console.error('Error submitting vote:', error);
+    }
+  };
+
+  const handleAdminLogout = () => {
+    localStorage.removeItem('adminLoggedIn');
+    setIsAdmin(false);
+  };
+
+  const AdminPanel = () => {
+    if (!isAdmin) return null;
+    
+    return (
+      <div className="admin-panel">
+        <h2>Admin Controls</h2>
+        <button onClick={handleAdminLogout}>Logout</button>
+        {/* Add other admin controls here */}
+      </div>
+    );
+  };
+
+  if (hasVoted) {
+    return (
+      <>
+        {isAdmin && <AdminHeaderPanel onLogout={handleAdminLogout} />}
+        <div className="container">
+          <header>
+            <h1>Hawk Tuah Secondary Election</h1>
+            <div className="subtitle">Thank you for voting!</div>
+          </header>
+          <div className="success-message">
+            Your vote has been successfully recorded.
+          </div>
+          <div className="results-container">
+            <h2>Current Results</h2>
+            <div className="chart-container">
+              <canvas ref={chartRef}></canvas>
+            </div>
+          </div>
+          {isAdmin && <AdminPanel />}
+          {!isAdmin && (
+            <button 
+              className="admin-button"
+              onClick={() => setShowAdminLogin(true)}
+            >
+              Admin Login
+            </button>
+          )}
+          {showAdminLogin && <AdminLoginModal onClose={() => setShowAdminLogin(false)} />}
+        </div>
+      </>
+    );
+  }
+
+  if (showConfirmation) {
+    const candidate = candidates.find(c => c.id === selectedCandidate);
+    return (
+      <>
+        {isAdmin && <AdminHeaderPanel onLogout={handleAdminLogout} />}
+        <div className="container">
+          <header>
+            <h1>Confirm Your Vote</h1>
+          </header>
+          <div className="vote-form">
+            <h2>Please review your vote:</h2>
+            <div className="form-group">
+              <label>Name:</label>
+              <p>{name}</p>
+            </div>
+            <div className="form-group">
+              <label>Selected Candidate:</label>
+              <p className={`candidate-${selectedCandidate}`}>{candidate?.name}</p>
+            </div>
+            <div className="form-group">
+              <label>Your Reason:</label>
+              <p>{reason}</p>
+            </div>
+            <div className="form-group">
+              <label>What you want from a leader:</label>
+              <p>{leaderQualities}</p>
+            </div>
+            <button onClick={confirmVote}>Confirm Vote</button>
+            <button 
+              onClick={() => setShowConfirmation(false)}
+              style={{marginLeft: '1rem', background: '#95a5a6'}}
+            >
+              Edit Response
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {isAdmin && <AdminHeaderPanel onLogout={handleAdminLogout} />}
+      <div className="container">
+        <header>
+          <h1>Hawk Tuah Secondary Election</h1>
+          <div className="subtitle">Exercise Your Democratic Right - Shape Our Future Together</div>
+        </header>
+
+        <form onSubmit={handleSubmit} className="vote-form">
+          <div className="form-group">
+            <label>Your Name:</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Select Your Candidate:</label>
+            <div className="candidate-options">
+              {candidates.map((candidate) => (
+                <div
+                  key={candidate.id}
+                  className={`candidate-option candidate-${candidate.id} ${selectedCandidate === candidate.id ? 'selected' : ''}`}
+                  onClick={() => setSelectedCandidate(candidate.id)}
+                >
+                  <img src={candidate.avatar} alt={candidate.name} className="candidate-avatar" />
+                  <div className="candidate-name">{candidate.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Why are you choosing this candidate?</label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              required
+              rows="4"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>What qualities do you want to see in a leader?</label>
+            <textarea
+              value={leaderQualities}
+              onChange={(e) => setLeaderQualities(e.target.value)}
+              required
+              rows="4"
+            />
+          </div>
+
+          <button type="submit">Cast My Vote</button>
+        </form>
+
+        <div className="results-container">
+          <h2>Current Results</h2>
+          <div className="chart-container">
+            <canvas ref={chartRef}></canvas>
+          </div>
+        </div>
+
+        {isAdmin && <AdminPanel />}
+        
+        {!isAdmin && (
+          <button 
+            className="admin-button"
+            onClick={() => setShowAdminLogin(true)}
+          >
+            Admin Login
+          </button>
+        )}
+        {showAdminLogin && <AdminLoginModal onClose={() => setShowAdminLogin(false)} />}
+      </div>
+    </>
+  );
+};
+
+ReactDOM.render(<VotingApp />, document.getElementById('root'));
+</script>
+</body></html>
